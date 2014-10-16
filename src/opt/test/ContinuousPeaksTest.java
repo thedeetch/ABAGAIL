@@ -24,6 +24,7 @@ import opt.ga.StandardGeneticAlgorithm;
 import opt.prob.GenericProbabilisticOptimizationProblem;
 import opt.prob.MIMIC;
 import opt.prob.ProbabilisticOptimizationProblem;
+import shared.ConvergenceTrainer;
 import shared.FixedIterationTrainer;
 
 /**
@@ -49,25 +50,30 @@ public class ContinuousPeaksTest {
         HillClimbingProblem hcp = new GenericHillClimbingProblem(ef, odd, nf);
         GeneticAlgorithmProblem gap = new GenericGeneticAlgorithmProblem(ef, odd, mf, cf);
         ProbabilisticOptimizationProblem pop = new GenericProbabilisticOptimizationProblem(ef, odd, df);
-        
+
         RandomizedHillClimbing rhc = new RandomizedHillClimbing(hcp);      
-        FixedIterationTrainer fit = new FixedIterationTrainer(rhc, 200000);
+//        FixedIterationTrainer fit = new FixedIterationTrainer(rhc, 200000);
+        ConvergenceTrainer fit = new ConvergenceTrainer(rhc, 0, 200000);
         fit.train();
-        System.out.println(ef.value(rhc.getOptimal()));
+        System.out.println("RHC: " + ef.value(rhc.getOptimal()));
+        System.out.println("RHC iterations: " + fit.getIterations());
         
         SimulatedAnnealing sa = new SimulatedAnnealing(1E11, .95, hcp);
-        fit = new FixedIterationTrainer(sa, 200000);
+        fit = new ConvergenceTrainer(sa, .000001, 200000);
         fit.train();
         System.out.println(ef.value(sa.getOptimal()));
+        System.out.println(fit.getIterations());
         
         StandardGeneticAlgorithm ga = new StandardGeneticAlgorithm(200, 100, 10, gap);
-        fit = new FixedIterationTrainer(ga, 1000);
+        fit = new ConvergenceTrainer(ga, .000001, 200000);
         fit.train();
         System.out.println(ef.value(ga.getOptimal()));
+        System.out.println(fit.getIterations());
         
         MIMIC mimic = new MIMIC(200, 20, pop);
-        fit = new FixedIterationTrainer(mimic, 1000);
+        fit = new ConvergenceTrainer(mimic, .000001, 200000);
         fit.train();
         System.out.println(ef.value(mimic.getOptimal()));
+        System.out.println(fit.getIterations());
     }
 }

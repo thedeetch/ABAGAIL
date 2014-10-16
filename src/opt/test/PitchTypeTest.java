@@ -87,17 +87,17 @@ public class PitchTypeTest {
             oa.train();
 
             double error = 0;
-            for (int j = 0; j < instances.length; j++) {
-                network.setInputValues(instances[j].getData());
+            for (Instance instance : instances) {
+                network.setInputValues(instance.getData());
                 network.run();
 
-                Instance output = instances[j].getLabel();
+                Instance output = instance.getLabel();
                 Instance example = new Instance(network.getOutputValues());
                 example.setLabel(new Instance(Double.parseDouble(network.getOutputValues().toString())));
                 error += measure.value(output, example);
             }
 
-            System.out.println(df.format(error));
+//            System.out.println(df.format(error));
         }
 
         System.out.println();
