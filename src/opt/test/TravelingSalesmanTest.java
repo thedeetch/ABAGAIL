@@ -35,6 +35,7 @@ public class TravelingSalesmanTest {
      * @param args ignored
      */
     public static void main(String[] args) {
+        System.out.println("algorithm,optima,iterations,duration,n");
         for (int N = 10; N < 101; N += 10) {
             Random random = new Random();
             // create the random points
@@ -54,8 +55,6 @@ public class TravelingSalesmanTest {
             Arrays.fill(ranges, N);
             Distribution df = new DiscreteDependencyTree(.1, ranges);
             OptimaTrainer fit;
-
-            System.out.println("algorithm,optima,iterations,duration,n");
 
             for (int i = 0; i < 5; i++) {
                 HillClimbingProblem hcp = new GenericHillClimbingProblem(ef, odd, nf);

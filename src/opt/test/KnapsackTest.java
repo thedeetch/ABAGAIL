@@ -60,6 +60,7 @@ public class KnapsackTest {
      * @param args ignored
      */
     public static void main(String[] args) {
+        System.out.println("algorithm,optima,iterations,duration,n");
         for (int N = 1; N < 50; N++) {
             KNAPSACK_VOLUME = MAX_VOLUME * N * COPIES_EACH * .4;
 
@@ -80,8 +81,6 @@ public class KnapsackTest {
             CrossoverFunction cf = new UniformCrossOver();
             Distribution df = new DiscreteDependencyTree(.1, ranges);
             OptimaTrainer fit;
-
-            System.out.println("algorithm,optima,iterations,duration,n");
 
             for (int i = 0; i < 5; i++) {
                 HillClimbingProblem hcp = new GenericHillClimbingProblem(ef, odd, nf);

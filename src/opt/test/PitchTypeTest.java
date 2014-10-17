@@ -22,66 +22,73 @@ public class PitchTypeTest {
     private static DecimalFormat df = new DecimalFormat("0.000");
 
     public static void main(String[] args) throws IOException {
-        int inputLayer = 9, hiddenLayer = 2, outputLayer = 1, iterations = Integer.parseInt(args[3]);
-        Instance[] instances = initializeInstances(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+        System.out.println("algorithm,correct,incorrect,error,trainingtime,testingtime,n");
+        for (int n = 100; n < 1001; n += 100) {
+            for (int repeat = 0; repeat < 5; repeat++) {
+                int inputLayer = 9, hiddenLayer = 2, outputLayer = 1, iterations = n;
+                Instance[] instances = initializeInstances(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]));
 
-        ErrorMeasure measure = new SumOfSquaresError();
-        DataSet set = new DataSet(instances);
+                ErrorMeasure measure = new SumOfSquaresError();
+                DataSet set = new DataSet(instances);
 
-        BackPropagationNetworkFactory factory = new BackPropagationNetworkFactory();
-        NeuralNetworkOptimizationProblem[] nnop = new NeuralNetworkOptimizationProblem[3];
-        BackPropagationNetwork networks[] = new BackPropagationNetwork[3];
-        OptimizationAlgorithm[] oa = new OptimizationAlgorithm[3];
+                BackPropagationNetworkFactory factory = new BackPropagationNetworkFactory();
+                NeuralNetworkOptimizationProblem[] nnop = new NeuralNetworkOptimizationProblem[3];
+                BackPropagationNetwork networks[] = new BackPropagationNetwork[3];
+                OptimizationAlgorithm[] oa = new OptimizationAlgorithm[3];
 
-        for (int i = 0; i < oa.length; i++) {
-            networks[i] = factory.createClassificationNetwork(
-                    new int[]{inputLayer, hiddenLayer, outputLayer});
-            nnop[i] = new NeuralNetworkOptimizationProblem(set, networks[i], measure);
-        }
+                for (int i = 0; i < oa.length; i++) {
+                    networks[i] = factory.createClassificationNetwork(
+                            new int[]{inputLayer, hiddenLayer, outputLayer});
+                    nnop[i] = new NeuralNetworkOptimizationProblem(set, networks[i], measure);
+                }
 
-        oa[0] = new RandomizedHillClimbing(nnop[0]);
-        oa[1] = new SimulatedAnnealing(1E25, .95, nnop[1]);
-        oa[2] = new StandardGeneticAlgorithm(200, 100, 10, nnop[2]);
+                oa[0] = new RandomizedHillClimbing(nnop[0]);
+                oa[1] = new SimulatedAnnealing(1E25, .95, nnop[1]);
+                oa[2] = new StandardGeneticAlgorithm(200, 100, 10, nnop[2]);
 
-        for (int i = 0; i < oa.length; i++) {
-            double start = System.nanoTime(), end, trainingTime, testingTime, correct = 0, incorrect = 0;
-            train(oa[i], networks[i], instances, iterations); //trainer.train();
-            end = System.nanoTime();
-            trainingTime = end - start;
-            trainingTime /= Math.pow(10, 9);
+                for (int i = 0; i < oa.length; i++) {
+                    double start = System.nanoTime(), end, trainingTime, testingTime, correct = 0, incorrect = 0;
+                    train(oa[i], networks[i], instances, iterations); //trainer.train();
+                    end = System.nanoTime();
+                    trainingTime = end - start;
+                    trainingTime /= Math.pow(10, 9);
 
-            Instance optimalInstance = oa[i].getOptimal();
-            networks[i].setWeights(optimalInstance.getData());
+                    Instance optimalInstance = oa[i].getOptimal();
+                    networks[i].setWeights(optimalInstance.getData());
 
-            System.out.println("Weights: " + optimalInstance.getData().toString());
+//                System.out.println("Weights: " + optimalInstance.getData().toString());
 
-            double predicted, actual;
-            start = System.nanoTime();
-            for (int j = 0; j < instances.length; j++) {
-                networks[i].setInputValues(instances[j].getData());
-                networks[i].run();
+                    double predicted, actual;
+                    start = System.nanoTime();
+                    for (int j = 0; j < instances.length; j++) {
+                        networks[i].setInputValues(instances[j].getData());
+                        networks[i].run();
 
-                predicted = Double.parseDouble(instances[j].getLabel().toString());
-                actual = Double.parseDouble(networks[i].getOutputValues().toString());
+                        predicted = Double.parseDouble(instances[j].getLabel().toString());
+                        actual = Double.parseDouble(networks[i].getOutputValues().toString());
 
-                double trash = Math.abs(predicted - actual) < 0.5 ? correct++ : incorrect++;
+                        double trash = Math.abs(predicted - actual) < 0.5 ? correct++ : incorrect++;
 
+                    }
+                    end = System.nanoTime();
+                    testingTime = end - start;
+                    testingTime /= Math.pow(10, 9);
+
+                    System.out.println(oa[i].getClass().getName() + "," + correct + "," + incorrect + "," + (correct / (correct + incorrect) * 100) + "," + trainingTime + "," + testingTime + "," + n);
+
+//                System.out.println("\nResults for " + oa[i].getClass().getName() + ": \nCorrectly classified " + correct + " instances." +
+//                        "\nIncorrectly classified " + incorrect + " instances.\nPercent correctly classified: "
+//                        + df.format(correct / (correct + incorrect) * 100) + "%\nTraining time: " + df.format(trainingTime)
+//                        + " seconds\nTesting time: " + df.format(testingTime) + " seconds\n");
+                }
             }
-            end = System.nanoTime();
-            testingTime = end - start;
-            testingTime /= Math.pow(10, 9);
-
-            System.out.println("\nResults for " + oa[i].getClass().getName() + ": \nCorrectly classified " + correct + " instances." +
-                    "\nIncorrectly classified " + incorrect + " instances.\nPercent correctly classified: "
-                    + df.format(correct / (correct + incorrect) * 100) + "%\nTraining time: " + df.format(trainingTime)
-                    + " seconds\nTesting time: " + df.format(testingTime) + " seconds\n");
         }
     }
 
     private static void train(OptimizationAlgorithm oa, BackPropagationNetwork network, Instance[] instances, int iterations) {
         ErrorMeasure measure = new SumOfSquaresError();
 
-        System.out.println("\nError results for " + oa.getClass().getName() + "\n---------------------------");
+//        System.out.println("\nError results for " + oa.getClass().getName() + "\n---------------------------");
 
         for (int i = 0; i < iterations; i++) {
             oa.train();
@@ -100,7 +107,7 @@ public class PitchTypeTest {
 //            System.out.println(df.format(error));
         }
 
-        System.out.println();
+//        System.out.println();
     }
 
     private static Instance[] initializeInstances(String file, int numberOfAttributes, int numberOfInstances) throws IOException {
